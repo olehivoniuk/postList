@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {usePosts} from './hooks/usePosts'
+import { getPageCount, getPagesArray } from "./utils/pages";
+import { useFetching } from "./hooks/useFetching";
 import PostList from "./components/PostList";
 import Postform from "./components/Postform";
 import PostFilter from "./components/PostFilter";
@@ -8,7 +10,7 @@ import MyButton from "./components/UI/button/MyButton";
 import PostService from "./API/PostService";
 import Loader from "./components/UI/Loader/Loader";
 import './styles/App.css'
-import { useFetching } from "./hooks/useFetching";
+import Pagination from "./components/UI/pagination/Pagination";
 
 
 
@@ -17,7 +19,7 @@ function App() {
   const [ posts, setPosts] = useState ([])
   const [filter, setFilter ] = useState ({sort:'', query: ''}); 
   const [modal, setModal] = useState(false)
-  const [totalCount, setTotalCount] = useState (0); 
+  const [totalPages, setTotalPages] = useState (0); 
   const [limit, setLimit] = useState (10);
   const [page, setPage] = useState (1); 
  
@@ -25,16 +27,19 @@ function App() {
 
   const sortedAndSearchPosts = usePosts(posts, filter.sort, filter.query);
 
-  const[fetchPosts, isPostLoading, postError] = useFetching( async () => {
+
+  const[fetchPosts, isPostLoading, postError] = useFetching( async (limit, page) => {
     const response = await PostService.getAll(limit, page); 
     setPosts(response.data)
-    console.log(response.headers['x-total-count'])
-    setTotalCount(response.headers['x-total-count'])
+     const totalCount = (response.headers['x-total-count'])
+    setTotalPages(getPageCount(totalCount, limit))
   })
 
+  console.log(totalPages)
+
   useEffect(()=>{
-    fetchPosts()
-  }, [])
+    fetchPosts(limit, page)
+  }, [page])
 
    const createPost = (newPost) =>{
      setPosts([...posts, newPost])
@@ -43,6 +48,11 @@ function App() {
 
    const removePost = (post) =>{
      setPosts(posts.filter(p => p.id !== post.id))
+   }
+
+   const changePage = (page) => {
+     setPage(page)
+     fetchPosts(limit,page)
    }
 
 
@@ -65,6 +75,11 @@ function App() {
          : <PostList remove ={removePost} posts = {sortedAndSearchPosts} title = 'List about JS'/>
 
       }
+      
+      <Pagination
+       page={page}
+       changePage ={changePage}
+       totalPages={totalPages}/>
     </div>
   );
 }
