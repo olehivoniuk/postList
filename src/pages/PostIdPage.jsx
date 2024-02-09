@@ -37,14 +37,14 @@ const PostIdPage = () => {
       </h1>
       {isComLoading
         ? <Loader/>
-        : <div style={{marginTop:"15px"}}>
-            {comments.map(comm => <div>
-                  <h5>{comm.email}</h5>
-                  <div>{comm.body}</div>
+        : <div style={{ marginTop: "15px" }}>
+        {comments.map((comm, index) => (
+            <div key={index}>
+                <h5>{comm.email}</h5>
+                <div>{comm.body}</div>
             </div>
-
-            )}
-        </div>
+        ))}
+    </div>
       }
 
     </div>
